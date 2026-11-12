@@ -75,7 +75,9 @@ forest-ground-filter/
 │   ├── io.py                # Read / write point clouds and masks
 │   └── cli.py               # Command line
 ├── benchmarks/
-│   └── forinstance.py       # Benchmark on FOR-instance
+│   ├── methods.py           # All compared filters (CSF / SMRF need CSF and PDAL)
+│   ├── forinstance.py       # Benchmark on FOR-instance (ULS, MLS)
+│   └── tls_sets.py          # Benchmark on TLS sets
 ├── examples/
 │   └── slurm_array.sbatch
 └── tests/
