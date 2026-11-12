@@ -1,0 +1,21 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it and CANUPO (Brodu & Lague 2012)."
+title: "forest-ground-filter: label-free ground removal for forest point clouds"
+version: 0.1.0
+license: Apache-2.0
+authors:
+  - name: "AUTHORS TO BE FILLED IN"
+references:
+  - type: article
+    title: "3D terrestrial lidar data classification of complex natural scenes using a multi-scale dimensionality criterion: Applications in geomorphology"
+    authors:
+      - family-names: Brodu
+        given-names: Nicolas
+      - family-names: Lague
+        given-names: Dimitri
+    journal: "ISPRS Journal of Photogrammetry and Remote Sensing"
+    volume: 68
+    start: 121
+    end: 134
+    year: 2012
+    doi: 10.1016/j.isprsjprs.2012.01.006
