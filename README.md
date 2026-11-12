@@ -102,7 +102,19 @@ Established ground filters, mostly developed for airborne lidar:
 
 ## Citation
 
-If you use this repository, please cite CANUPO and Demantké et al.:
+If you use this repository, please cite:
+
+```bibtex
+@software{sharma2026forestgroundfilter,
+      title={forest-ground-filter: Label-free Ground Removal for Forest Point Clouds},
+      author={Ayushi Sharma},
+      year={2026},
+      version={0.1.0},
+      url={https://github.com/GeoSense-Freiburg/forest-ground-filter},
+}
+```
+
+and the works it builds on:
 
 ```bibtex
 @article{brodu2012canupo,

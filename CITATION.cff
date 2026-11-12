@@ -3,8 +3,11 @@ message: "If you use this software, please cite it, CANUPO (Brodu & Lague 2012) 
 title: "forest-ground-filter: label-free ground removal for forest point clouds"
 version: 0.1.0
 license: Apache-2.0
+date-released: 2026-11-12
+repository-code: "https://github.com/GeoSense-Freiburg/forest-ground-filter"
 authors:
-  - name: "AUTHORS TO BE FILLED IN"
+  - family-names: Sharma
+    given-names: Ayushi
 references:
   - type: article
     title: "3D terrestrial lidar data classification of complex natural scenes using a multi-scale dimensionality criterion: Applications in geomorphology"
