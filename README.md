@@ -39,6 +39,32 @@ forest-ground-filter --in chunks/ --out ground_masks/ --mask-only --shard 0/8
 
 For a Slurm array, see [`examples/slurm_array.sbatch`](./examples/slurm_array.sbatch).
 
+## Filters
+
+Every filter first thins the chunk to one point per 5 cm voxel and measures each point's height above the local floor (the lowest point of its 2 m × 2 m column). Choose one with `ground_mask(xyz, method=...)`.
+
+**Height** (`"height"`)
+- Ground = every point less than 0.5 m above the local floor.
+- Simple and fast, but also removes the lowest 0.5 m of every stem and shrub.
+
+**Shape rule** (`"shape_rule"`)
+- Look at each low point's neighbours within 1.2 m.
+- Ground = the neighbours form a flat sheet, the sheet is tilted less than 20° from the terrain, and the point is less than 1.5 m above the floor.
+- Points with too few neighbours to judge: ground if below 0.5 m.
+- Stems and shrubs are rarely flat, so few trees are removed.
+
+**SS-CANUPO, self-seeded CANUPO** (`"ss_canupo"`)
+- Take the lowest points of the chunk (less than 10 cm above the floor) as ground examples, and points more than 3 m up as vegetation examples.
+- Describe every point by how line-like and how plane-like its neighbourhood is at 10 sizes, from 0.1 m to 2 m (the CANUPO features).
+- Train a linear classifier on the examples of this chunk only, so it adapts to each scanner and density.
+- Classify every point below 1.5 m with it.
+- Removes fewer stem bases than the shape rule, but fails when the lowest points are not ground (e.g. scans with the ground already cut away).
+
+**Routed** (`"routed"`, default)
+- Run the shape rule and count in how many 2 m columns it finds ground (coverage).
+- Coverage ≥ 0.63: the chunk has a floor, so use SS-CANUPO.
+- Coverage < 0.63: the chunk has no floor, so keep the shape rule's result.
+
 ## Repository Structure
 
 ```text
