@@ -1,19 +1,25 @@
-"""Ground filters for forest point clouds, and the routed combination used by default.
+"""The ground filters.
 
-All filters take a VOXELISED, CENTRED cloud `v` (n x 3, one point per 0.05 m voxel; see `ground_mask` for raw
-input) and return a bool "is ground" per point. Nothing is trained on labelled data: every setting is a fixed
-constant of `Settings`.
+Most people only need `ground_mask(xyz)` at the bottom of this file. It takes raw points and returns True for
+every point it thinks is ground. Nothing here is trained on labelled data; all settings are fixed numbers
+in `Settings`.
 
-shape_rule    planar (a2D >= 0.3 at r = 1.2 m), facing the local terrain (normal within 20 deg) and low (< 1.5 m
-              above the 2 m-cell minimum); fewer than 5 neighbours -> height < 0.5 m. Safe on scenes without
-              ground (it rarely calls stems or shrubs ground), but cuts some stem bases.
-ss_canupo     self-seeded CANUPO: CANUPO's multi-scale dimensionality (Brodu & Lague 2012; a1D, a2D at 10 scales,
-              0.1-2 m) with an LDA trained per chunk on height pseudo-labels (bottom 0.10 m = ground, > 3 m =
-              vegetation). Better ground recall and fewer stem bases cut, but wrong where the bottom layer is not
-              ground (ground-free scenes: it then learns stem bases as ground).
-coverage      share of occupied 2 m cells in which the shape rule finds ground: high on real ground (>= 0.77 on
-              all 351 FOR-instance ground tiles), low without (<= 0.49 on all 170 no-ground tiles).
-routed        ss_canupo if coverage >= 0.63, else shape_rule.  <- default
+There are three filters and one way of combining them:
+
+- shape_rule: a point is ground if its surroundings are flat, face the same way as the terrain, and sit
+  low. It is cautious: stems and shrubs are rarely flat, so it seldom removes trees, but it does nibble at
+  stem bases.
+- ss_canupo ("self-seeded CANUPO"): every chunk trains its own small classifier. It takes the lowest points
+  as examples of ground and points high up as examples of vegetation, then judges everything else by the
+  shape of its neighbourhood at many scales. It finds more ground and spares more stem bases than the
+  shape rule. It goes wrong when the lowest points are not ground, e.g. scans whose ground was already
+  removed, because it then learns stem bases as "ground".
+- coverage: tells the two situations apart. On real ground the shape rule finds something in nearly every
+  2 m cell; without ground it only finds scattered bits.
+- routed (the default): use ss_canupo when coverage says there is ground, and the shape rule otherwise.
+
+All filters below work on a cloud that is already thinned to 0.05 m voxels and centred; `ground_mask` takes
+care of that for you.
 """
 from dataclasses import dataclass
 
@@ -24,31 +30,39 @@ from .features import cell_index, ground_surface, lda_fit, multiscale, planarity
 
 @dataclass(frozen=True)
 class Settings:
-    grid: float = 0.05            # voxel size (m)
-    cell: float = 2.0             # floor cells (m)
-    hmax: float = 1.5             # ground only below this height above the cell minimum (m)
-    fallback_h: float = 0.5       # height rule for points too sparse to measure shape (m)
-    min_nb: int = 5               # fewer neighbours than this -> fallback
+    """All the numbers the filters use. The defaults are what the benchmark results were produced with."""
+
+    grid: float = 0.05            # points are thinned to one per 5 cm voxel
+    cell: float = 2.0             # the "local floor" is the lowest point in each 2 m column
+    hmax: float = 1.5             # nothing higher than 1.5 m above that floor can be ground
+    fallback_h: float = 0.5       # when a point is too isolated to judge, call it ground if below 0.5 m
+    min_nb: int = 5               # "too isolated" means fewer than 5 neighbours
+
     # shape rule
-    rule_scale: float = 1.2       # PCA radius (m)
-    rule_planarity: float = 0.3   # a2D threshold
-    rule_angle: float = 20.0      # max angle between the surface normal and the terrain normal (deg)
-    # SS-CANUPO
-    scales: tuple = (0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0)
-    seed_ground_h: float = 0.10   # ground pseudo-labels: below this height (m)
-    seed_veg_h: float = 3.0       # vegetation pseudo-labels: above this height (m)
-    n_seed: int = 20_000          # pseudo-labels per class
-    min_seed: int = 500           # fewer -> height fallback for the whole chunk
-    count_scale: float = 1.0      # scale whose neighbour count decides the sparse fallback
-    seed: int = 0                 # random seed for the pseudo-label sample
+    rule_scale: float = 1.2       # look at neighbours within 1.2 m
+    rule_planarity: float = 0.3   # how flat that neighbourhood must be (0 = not at all, 1 = perfect sheet)
+    rule_angle: float = 20.0      # and it may tilt at most 20 degrees away from the terrain
+
+    # self-seeded CANUPO
+    scales: tuple = (0.1, 0.15, 0.2, 0.3, 0.4, 0.6, 0.8, 1.0, 1.5, 2.0)  # radii of the shape fingerprint (m)
+    seed_ground_h: float = 0.10   # points this close to the floor are the ground examples
+    seed_veg_h: float = 3.0       # points this high above it are the vegetation examples
+    n_seed: int = 20_000          # how many examples of each to train on
+    min_seed: int = 500           # with fewer examples than this, skip the classifier and use the height rule
+    count_scale: float = 1.0      # radius at which we check whether a point is too isolated
+    seed: int = 0                 # makes the random choice of examples repeatable
+
     # routing
-    coverage_cut: float = 0.63    # middle of the FOR-instance gap (0.49 no-ground max, 0.77 ground min)
+    coverage_cut: float = 0.63    # chunks above this coverage count as "has ground". On FOR-instance, chunks
+                                  # without ground never went above 0.49 and chunks with ground never fell
+                                  # below 0.77, so 0.63 sits in the middle of that gap.
 
 
 DEFAULT = Settings()
 
 
 def shape_rule(v, s=DEFAULT):
+    """Ground = low, flat and facing the same way as the terrain."""
     h, tnorm = ground_surface(v, s.cell)
     g = np.zeros(len(v), bool)
     cand = np.flatnonzero(h < s.hmax)
@@ -62,6 +76,10 @@ def shape_rule(v, s=DEFAULT):
 
 
 def ss_canupo(v, s=DEFAULT, return_info=False):
+    """Self-seeded CANUPO: train a classifier on this chunk's own lowest and highest points, then apply it.
+
+    Only safe when the lowest points really are ground; `routed` checks that first.
+    """
     h, _ = ground_surface(v, s.cell)
     clouds = scale_clouds(v, s.scales, s.grid)
     fallback = h < s.fallback_h
@@ -84,12 +102,13 @@ def ss_canupo(v, s=DEFAULT, return_info=False):
 
 
 def coverage(v, mask, s=DEFAULT):
-    """Share of occupied `s.cell` columns that contain at least one point of `mask`."""
+    """Of all 2 m columns that contain points, the share in which `mask` marks at least one point."""
     occ, cinv = np.unique(cell_index(v[:, :2], s.cell), return_inverse=True)
     return len(np.unique(cinv[mask])) / len(occ)
 
 
 def routed(v, s=DEFAULT, return_info=False):
+    """Run the shape rule, check whether the chunk has ground, and if so hand over to self-seeded CANUPO."""
     rule = shape_rule(v, s)
     cov = coverage(v, rule, s)
     info = dict(coverage=round(cov, 4), method="shape_rule")
@@ -106,10 +125,16 @@ METHODS = {"routed": routed, "ss_canupo": ss_canupo, "shape_rule": shape_rule,
 
 
 def ground_mask(xyz, method="routed", settings=DEFAULT, return_info=False):
-    """Bool "is ground" per input point. `xyz`: (n, 3) raw coordinates, any offset or density.
+    """Find the ground points in a point cloud.
 
-    The cloud is voxelised at `settings.grid` (first point per voxel), filtered, and every input point gets
-    its voxel's label. `method`: "routed" (default), "ss_canupo", "shape_rule" or "height"."""
+    Give it an (n, 3) array of coordinates in metres (any offset, any density) and you get back n booleans,
+    True for ground. Internally the cloud is thinned to 5 cm voxels, filtered, and every original point
+    gets the answer of its voxel.
+
+    `method` picks the filter: "routed" (default and recommended), or one of "ss_canupo", "shape_rule" and
+    "height" (everything below 0.5 m) if you want to compare them. With `return_info=True` you also get a
+    small dict saying which filter was used and the chunk's coverage.
+    """
     xyz = np.asarray(xyz, np.float64)
     first, inv = voxel_first(xyz, settings.grid)
     v = xyz[first]

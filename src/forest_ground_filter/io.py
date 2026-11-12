@@ -1,4 +1,4 @@
-"""Reading and writing .laz / .las / .ply point clouds and ground masks."""
+"""Reading and writing point clouds (.laz, .las, .ply) and ground masks."""
 import os
 
 import numpy as np
@@ -7,7 +7,7 @@ LAS_EXT = (".laz", ".las")
 
 
 def read_xyz(path):
-    """Returns (file object, xyz float64 (n, 3)). The object is passed back to `write_kept`."""
+    """Read a point cloud. Returns the opened file (keep it for `write_kept`) and its coordinates."""
     if path.lower().endswith(LAS_EXT):
         import laspy
         las = laspy.read(path)
@@ -19,9 +19,13 @@ def read_xyz(path):
 
 
 def write_kept(obj, path, keep):
-    """Write the points with keep == True, all point fields preserved. Atomic (temp file + rename)."""
+    """Write only the points where `keep` is True, with all their original fields.
+
+    We write to a temporary file first and rename it at the end, so a crash never leaves a half-written
+    file behind.
+    """
     root, ext = os.path.splitext(path)
-    tmp = root + ".tmp" + ext  # keep the extension: laspy chooses LAZ compression from it
+    tmp = root + ".tmp" + ext  # the temp name must still end in .laz, or laspy writes it uncompressed
     if path.lower().endswith(LAS_EXT):
         import laspy
         laspy.LasData(header=obj.header, points=obj.points[keep]).write(tmp)
@@ -32,7 +36,7 @@ def write_kept(obj, path, keep):
 
 
 def save_mask(path, ground):
-    """Bool mask per input point, bit-packed (`ground`, `n`)."""
+    """Save a ground mask (one True/False per point, in file order) as a small compressed file."""
     tmp = path + ".tmp.npz"
     np.savez_compressed(tmp, ground=np.packbits(ground), n=len(ground))
     os.replace(tmp, path)
