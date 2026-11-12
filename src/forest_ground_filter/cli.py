@@ -120,10 +120,10 @@ def main(argv=None):
                 w.writerow(r)
             if done % 200 == 0 or done == len(files):
                 fh.flush()
-                rate = done / max(time.time() - t0, 1e-6)
-                eta = (len(files) - done) / max(rate, 1e-6) / 60
+                per_file = (time.time() - t0) / done
+                eta = (len(files) - done) * per_file / 60
                 print(
-                    f"  {done}/{len(files)}  {rate:.1f} files/s  "
+                    f"  {done}/{len(files)}  {per_file:.2f} s/file  "
                     f"eta {eta:.0f} min",
                     flush=True,
                 )

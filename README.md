@@ -112,6 +112,10 @@ Every plot is cut into 20 m chunks and each chunk is filtered on its own; scores
 
 TreeScanPL10K has no ground labels, so only tree damage is reported. Seconds per chunk: one CPU core, TreeScanPL10K chunks.
 
+**Chunk without ground** (BlueCat, TLS): points removed as ground in red; every red point is a tree point.
+
+![Filters on a chunk without ground](docs/no_ground_example.png)
+
 ## Acknowledgements
 
 - SS-CANUPO builds on **CANUPO** (Brodu & Lague, 2012): classifying points by their neighbourhood dimensionality at several scales with a linear classifier trained per scene. It is not a reimplementation of the CANUPO software.
