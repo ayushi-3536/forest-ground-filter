@@ -13,7 +13,7 @@ Removes ground points from forest point clouds (TLS, MLS, ULS) without labels or
 ## Setup
 
 ```
-git clone https://github.com/GeoSense-Freiburg/forest-ground-filter
+git clone https://github.com/ayushi-3536/forest-ground-filter
 cd forest-ground-filter
 pip install .
 ```
@@ -136,7 +136,7 @@ If you use this repository, please cite:
       author={Ayushi Sharma},
       year={2026},
       version={0.1.0},
-      url={https://github.com/GeoSense-Freiburg/forest-ground-filter},
+      url={https://github.com/ayushi-3536/forest-ground-filter},
 }
 ```
 

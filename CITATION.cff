@@ -4,7 +4,7 @@ title: "forest-ground-filter: label-free ground removal for forest point clouds"
 version: 0.1.0
 license: Apache-2.0
 date-released: 2026-11-12
-repository-code: "https://github.com/GeoSense-Freiburg/forest-ground-filter"
+repository-code: "https://github.com/ayushi-3536/forest-ground-filter"
 authors:
   - family-names: Sharma
     given-names: Ayushi
