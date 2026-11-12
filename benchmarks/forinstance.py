@@ -31,12 +31,12 @@ from multiprocessing import Pool
 import numpy as np
 from plyfile import PlyData
 
-from forest_ground_filter import DEFAULT, ground_mask, shape_rule, ss_canupo
+from forest_ground_filter import DEFAULT, shape_rule, ss_canupo
 from forest_ground_filter.features import ground_surface, voxel_first
+from methods import METHODS, filter_tile
 
 TILE = 20.0
 MIN_VOX = 10_000
-METHODS = ("routed", "ss_canupo", "shape_rule", "height")
 KEYS = (
     "tp",
     "fp",
@@ -113,13 +113,12 @@ def plot_tiles(path):
         # Too small to be a chunk: left unfiltered.
         if len(idx) < MIN_VOX:
             continue
+        masks, cov, _ = filter_tile(xyz[idx])
+        routes.append(
+            "ss_canupo" if cov >= DEFAULT.coverage_cut else "shape_rule"
+        )
         for m in preds:
-            if m == "routed":
-                g, info = ground_mask(xyz[idx], method=m, return_info=True)
-                routes.append(info["method"])
-            else:
-                g = ground_mask(xyz[idx], method=m)
-            preds[m][idx] = g
+            preds[m][idx] = masks[m]
     return dict(
         plot=name,
         sensor=sensor(name),
