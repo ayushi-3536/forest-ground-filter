@@ -86,7 +86,7 @@ forest-ground-filter/
 
 ## Results
 
-Every plot is cut into 20 m chunks and each chunk is filtered on its own; scores are on 0.05 m voxels. CSF and SMRF use their library defaults, CSF (relief) uses rigidness 2 and a 0.5 m cloth.
+Every plot is cut into 20 m chunks and each chunk is filtered on its own; scores are on 0.05 m voxels. CSF: `cloth-simulation-filter` library defaults (flat-terrain preset, rigidness 3, 1 m cloth). CSF (relief): its relief-terrain preset (rigidness 2) with a 0.5 m cloth. SMRF: PDAL `filters.smrf` defaults (1 m cell).
 
 **Ground F1** (labelled ground):
 
