@@ -7,7 +7,7 @@
 
 </div>
 
-Removes ground points from forest point clouds (TLS, MLS, ULS) without labels or training data, using a self-seeded CANUPO classifier per chunk with a shape-rule fallback for chunks without ground.
+Removes ground points from forest point clouds (TLS, MLS, ULS) without labels or training data, using a self-seeded, CANUPO-style classifier per chunk with a shape-rule fallback for chunks without ground.
 
 
 ## Setup
@@ -55,7 +55,7 @@ Every filter first thins the chunk to one point per 5 cm voxel and measures each
 
 **SS-CANUPO, self-seeded CANUPO** (`"ss_canupo"`)
 - Take the lowest points of the chunk (less than 10 cm above the floor) as ground examples, and points more than 3 m up as vegetation examples.
-- Describe every point by how line-like and how plane-like its neighbourhood is at 10 sizes, from 0.1 m to 2 m (the CANUPO features).
+- Describe every point by how line-like and how plane-like its neighbourhood is at 10 radii, from 0.1 m to 2 m (multi-scale dimensionality, as in CANUPO).
 - Train a linear classifier on the examples of this chunk only, so it adapts to each scanner and density.
 - Classify every point below 1.5 m with it.
 - Removes fewer stem bases than the shape rule, but fails when the lowest points are not ground (e.g. scans with the ground already cut away).
@@ -88,7 +88,7 @@ RESULTS_TABLES
 
 ## Citation
 
-This repository reimplements CANUPO; please cite:
+SS-CANUPO follows the CANUPO approach (multi-scale dimensionality and a linear classifier per scene) and uses the dimensionality features of Demantké et al.; it is not a reimplementation of the CANUPO software. Please cite:
 
 ```bibtex
 @article{brodu2012canupo,
@@ -99,5 +99,15 @@ This repository reimplements CANUPO; please cite:
       pages={121--134},
       year={2012},
       doi={10.1016/j.isprsjprs.2012.01.006},
+}
+
+@inproceedings{demantke2011dimensionality,
+      title={Dimensionality based scale selection in 3D lidar point clouds},
+      author={J{\'e}r{\^o}me Demantk{\'e} and Cl{\'e}ment Mallet and Nicolas David and Bruno Vallet},
+      booktitle={International Archives of the Photogrammetry, Remote Sensing and Spatial Information Sciences},
+      volume={XXXVIII-5/W12},
+      pages={97--102},
+      year={2011},
+      doi={10.5194/isprsarchives-XXXVIII-5-W12-97-2011},
 }
 ```

@@ -127,12 +127,15 @@ def scale_clouds(v, scales, grid):
 
 
 def multiscale(clouds, scales, query, k=KNN, count_scale=1.0):
-    """CANUPO descriptor of each query point (Brodu & Lague 2012).
+    """Multi-scale dimensionality descriptor of each query point.
 
     1. For each radius in `scales`, fit an ellipsoid to the neighbours.
     2. Compute a1D = (s1 - s2) / s1 (line-like) and a2D = (s2 - s3) / s1
-       (plane-like).
+       (plane-like), with s = sqrt(eigenvalue) (Demantke et al. 2011).
     3. Stack them: 2 values per radius, 20 for the default 10 radii.
+
+    Multi-scale, as in CANUPO (Brodu & Lague 2012), which instead uses
+    eigenvalue proportions and sphere diameters.
 
     Returns:
         feat: (n, 2 * len(scales)) descriptor.

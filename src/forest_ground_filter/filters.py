@@ -7,7 +7,7 @@ Filters:
 
 - shape_rule: ground = low, flat and aligned with the terrain. Rarely
   removes trees; cuts some stem bases.
-- ss_canupo: self-seeded CANUPO. Trains a classifier per chunk on its
+- ss_canupo: self-seeded, CANUPO-style. Trains a classifier per chunk on its
   lowest points (ground) and its high points (vegetation), then classifies
   the rest by multi-scale shape. Cuts fewer stem bases; fails if the lowest
   points are not ground (e.g. scans with the ground already removed).

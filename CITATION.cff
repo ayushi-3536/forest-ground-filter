@@ -1,5 +1,5 @@
 cff-version: 1.2.0
-message: "If you use this software, please cite it and CANUPO (Brodu & Lague 2012)."
+message: "If you use this software, please cite it, CANUPO (Brodu & Lague 2012) and Demantke et al. (2011)."
 title: "forest-ground-filter: label-free ground removal for forest point clouds"
 version: 0.1.0
 license: Apache-2.0
