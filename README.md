@@ -88,6 +88,8 @@ forest-ground-filter/
 
 Every plot is cut into 20 m chunks and each chunk is filtered on its own; scores are on 0.05 m voxels. CSF: `cloth-simulation-filter` library defaults (flat-terrain preset, rigidness 3, 1 m cloth). CSF (relief): its relief-terrain preset (rigidness 2) with a 0.5 m cloth. SMRF: PDAL `filters.smrf` defaults (1 m cell).
 
+The FOR-instance TLS plots (BlueCat) contain no ground, so they are excluded here and analysed separately below.
+
 **Ground F1** (labelled ground):
 
 | Filter | ULS<br>FOR-instance, 27 plots | MLS<br>FOR-instance, 1 plot | TLS<br>ForestSemantic, 1 plot |
@@ -101,18 +103,33 @@ Every plot is cut into 20 m chunks and each chunk is filtered on its own; scores
 
 **Stem bases removed** (tree points < 2 m above the ground) and **trees killed** (trees losing ≥ 50 % of their points):
 
-| Filter | ULS<br>FOR-instance | MLS<br>FOR-instance | TLS<br>ForestSemantic | TLS<br>TreeScanPL10K, 272 plots | TLS without ground<br>BlueCat | Seconds per chunk |
-|---|---|---|---|---|---|---|
-| **SS-CANUPO (routed, default)** | **5.3 %** / 0 | 1.8 % / 0 | 7.1 % / 0 | 5.2 % / 0 | **1.0 %** / 0 | 29.5 |
-| Shape rule | 10.0 % / 3 | **0.5 %** / 0 | **4.7 %** / 0 | **4.9 %** / 0 | **1.0 %** / 0 | 2.4 |
-| Height < 0.5 m | 21.9 % / 2 | 3.7 % / 0 | 12.2 % / 0 | 15.2 % / 0 | 14.1 % / 0 | < 0.1 |
-| CSF | 23.1 % / 3 | 2.1 % / 0 | 13.0 % / 0 | 18.3 % / 0 | 19.3 % / 48 | < 0.1 |
-| CSF (relief) | 29.5 % / 6 | 2.1 % / 0 | 20.5 % / 0 | 24.1 % / 0 | 22.8 % / 52 | < 0.1 |
-| SMRF | 33.5 % / 4 | 3.1 % / 0 | 28.1 % / 0 | 26.8 % / 0 | 16.7 % / 8 | 0.1 |
+| Filter | ULS<br>FOR-instance | MLS<br>FOR-instance | TLS<br>ForestSemantic | TLS<br>TreeScanPL10K, 272 plots | Seconds per chunk |
+|---|---|---|---|---|---|
+| **SS-CANUPO (routed, default)** | **5.3 %** / 0 | 1.8 % / 0 | 7.1 % / 0 | 5.2 % / 0 | 29.5 |
+| Shape rule | 10.0 % / 3 | **0.5 %** / 0 | **4.7 %** / 0 | **4.9 %** / 0 | 2.4 |
+| Height < 0.5 m | 21.9 % / 2 | 3.7 % / 0 | 12.2 % / 0 | 15.2 % / 0 | < 0.1 |
+| CSF | 23.1 % / 3 | 2.1 % / 0 | 13.0 % / 0 | 18.3 % / 0 | < 0.1 |
+| CSF (relief) | 29.5 % / 6 | 2.1 % / 0 | 20.5 % / 0 | 24.1 % / 0 | < 0.1 |
+| SMRF | 33.5 % / 4 | 3.1 % / 0 | 28.1 % / 0 | 26.8 % / 0 | 0.1 |
 
 TreeScanPL10K has no ground labels, so only tree damage is reported. Seconds per chunk: one CPU core, TreeScanPL10K chunks.
 
-**Chunk without ground** (BlueCat, TLS): points removed as ground in red; every red point is a tree point.
+### Additional analysis: chunks without ground
+
+CSF, SMRF and height rules assume that every chunk contains ground: they always take the lowest points as the terrain and remove what lies near it. In crowd-sourced data this does not always hold, e.g. for scans whose ground was already removed or chunks that contain only canopy. In such chunks they remove the bottom of every stem. SS-CANUPO first checks whether the chunk has ground (coverage) and otherwise falls back to the shape rule.
+
+FOR-instance BlueCat (TLS, ground removed by the data providers, 537 trees):
+
+| Filter | Stem bases removed | Trees killed |
+|---|---|---|
+| **SS-CANUPO (routed, default)** | **1.0 %** | **0** |
+| Shape rule | **1.0 %** | **0** |
+| Height < 0.5 m | 14.1 % | 0 |
+| CSF | 19.3 % | 48 |
+| CSF (relief) | 22.8 % | 52 |
+| SMRF | 16.7 % | 8 |
+
+One 20 m chunk, side view; points removed as ground in red (every red point is a tree point):
 
 ![Filters on a chunk without ground](docs/no_ground_example.png)
 
