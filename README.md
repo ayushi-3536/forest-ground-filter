@@ -86,9 +86,23 @@ forest-ground-filter/
 
 RESULTS_TABLES
 
+## Acknowledgements
+
+- SS-CANUPO builds on **CANUPO** (Brodu & Lague, 2012): classifying points by their neighbourhood dimensionality at several scales with a linear classifier trained per scene. It is not a reimplementation of the CANUPO software.
+- The dimensionality features (a1D, a2D) follow **Demantké et al. (2011)**.
+
+## Related ground filters
+
+Established ground filters, mostly developed for airborne lidar:
+
+- Axelsson (2000): progressive TIN densification. *Int. Arch. Photogramm. Remote Sens.* 33(B4), 110–117.
+- Zhang et al. (2003): progressive morphological filter. *IEEE TGRS* 41(4), 872–882. doi:10.1109/TGRS.2003.810682
+- Pingel et al. (2013): simple morphological filter (SMRF). *ISPRS J.* 77, 21–30. doi:10.1016/j.isprsjprs.2012.12.002
+- Zhang et al. (2016): cloth simulation filter (CSF). *Remote Sensing* 8(6), 501. doi:10.3390/rs8060501
+
 ## Citation
 
-SS-CANUPO follows the CANUPO approach (multi-scale dimensionality and a linear classifier per scene) and uses the dimensionality features of Demantké et al.; it is not a reimplementation of the CANUPO software. Please cite:
+If you use this repository, please cite CANUPO and Demantké et al.:
 
 ```bibtex
 @article{brodu2012canupo,
