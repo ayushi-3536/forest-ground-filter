@@ -128,12 +128,16 @@ def ss_canupo(v, s=DEFAULT, return_info=False):
 
     gi = rng.choice(gi, min(s.n_seed, len(gi)), replace=False)
     vi = rng.choice(vi, min(s.n_seed, len(vi)), replace=False)
-    xg, _ = multiscale(clouds, s.scales, v[gi], count_scale=s.count_scale)
+    cand = np.flatnonzero(h < s.hmax)
+    x, c1 = multiscale(clouds, s.scales, v[cand], count_scale=s.count_scale)
+    if s.seed_ground_h <= s.hmax:
+        # Ground samples are also candidates: reuse their descriptors.
+        xg = x[np.searchsorted(cand, gi)]
+    else:
+        xg, _ = multiscale(clouds, s.scales, v[gi], count_scale=s.count_scale)
     xv, _ = multiscale(clouds, s.scales, v[vi], count_scale=s.count_scale)
     w, t, bacc = lda_fit(xg.astype(np.float64), xv.astype(np.float64))
 
-    cand = np.flatnonzero(h < s.hmax)
-    x, c1 = multiscale(clouds, s.scales, v[cand], count_scale=s.count_scale)
     score = x.astype(np.float64) @ w
     pred = np.zeros(len(v), bool)
     pred[cand] = np.where(c1 < s.min_nb, fallback[cand], score >= t)

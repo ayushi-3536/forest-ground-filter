@@ -118,11 +118,17 @@ def scale_clouds(v, scales, grid):
     Each copy keeps one point per (radius / 6) voxel, never finer than
     `grid`, to keep large-radius estimates fast.
     """
-    out = {}
+    out, full = {}, None
     for s in scales:
         g = max(s / 6, grid)
-        c = v if g <= grid else v[voxel_first(v, g)[0]]
-        out[s] = (c, cKDTree(c))
+        if g <= grid:
+            # Radii that use the unthinned cloud share one tree.
+            if full is None:
+                full = (v, cKDTree(v))
+            out[s] = full
+        else:
+            c = v[voxel_first(v, g)[0]]
+            out[s] = (c, cKDTree(c))
     return out
 
 
